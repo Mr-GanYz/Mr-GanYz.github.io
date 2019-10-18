@@ -1,23 +1,25 @@
+import './styles/index.css'
+
 (() => {
   class Poker {
-    constructor (options) {
+    constructor(options) {
       Object.assign(this, options)
     }
 
-    set end ({x = 0, y = 0}) {
+    set end({ x = 0, y = 0 }) {
       this.endX = x
       this.endY = y
       this.vx = (x - this.currX) / 10
       this.vy = (y - this.currY) / 10
     }
 
-    get isArrived () {
+    get isArrived() {
       return (this.vy === 0 && this.currX >= this.endX) || (this.currY <= this.endY)
     }
   }
 
   class Game {
-    constructor (boxId) {
+    constructor(boxId) {
       const box = document.getElementById(boxId)
       this.staticCvs = document.createElement('canvas')
       if (!this.staticCvs.getContext) {
@@ -25,6 +27,7 @@
       }
 
       this.width = 900
+
       this.height = 700
 
       this.staticCvs.setAttribute('width', this.width)
@@ -39,21 +42,21 @@
       box.appendChild(this.movingCvs)
 
       this.img = new Image()
-      this.img.src = './images/poker-cards.svg'
+      this.img.src = require('./images/poker-cards.svg')
 
       this.pokerListY = 230 // y 方向上 pokerList 的基线
-      this.listSpaceX = 40  // 扑克 x 方向的间距
-      this.tempListY = 100  // y 方向上 tempList 的基线
-      this.pokerWidth = 60 
+      this.listSpaceX = 40 // 扑克 x 方向的间距
+      this.tempListY = 100 // y 方向上 tempList 的基线
+      this.pokerWidth = 60
       this.pokerHeight = 78
 
       this.isMousedown = false
 
-      this.movingCvs.addEventListener('mousedown', (e) => {
+      this.movingCvs.addEventListener('mousedown', e => {
         const status = this.gameStatus
         const { offsetX: x, offsetY: y } = e
         // 游戏结束后，点击 开始
-        if ((status === 'success' || status === 'fail')) {
+        if (status === 'success' || status === 'fail') {
           return (x >= 390 && x <= 510 && y >= 320 && y <= 380) && this.play()
         }
         // 游戏未结束时，点击 重玩
@@ -67,24 +70,26 @@
         // 鼠标带着 movingList 移出 canvas 后再移入时，movingList 不为空数组
         if (this.movingList.length === 0) {
           this.isMousedown = true
-          this.isMousedownPokerList(x, y) || this.isMousedownTempList(x, y) 
-          this.drawStaticCvs()
-          this.drawMovingList()
+          const isReDraw = this.isMousedownPokerList(x, y) || this.isMousedownTempList(x, y)
+          if (isReDraw) {
+            this.drawStaticCvs()
+            this.drawMovingList()
+          }
         }
       })
 
-      this.movingCvs.addEventListener('mousemove', (e) => {
+      this.movingCvs.addEventListener('mousemove', e => {
         if (!this.isMousedown) { return }
         this.pokerMoveWithMouse(this.movingList, e.offsetX, e.offsetY)
         this.drawMovingList()
       })
 
-      this.movingCvs.addEventListener('mouseup', (e) => {
+      this.movingCvs.addEventListener('mouseup', () => {
         if (!this.isMousedown) { return }
         this.isMousedown = false
         const isPokerLand = this.isPushPokerList() || this.isPushTempList() || this.isPushReadyList()
         if (!isPokerLand) {
-          const {index, list} = this.movingListInfo
+          const { index, list } = this.movingListInfo
           this[list][index].push(...this.movingList.splice(0))
         }
         this.drawStaticCvs()
@@ -93,18 +98,18 @@
       })
     }
 
-    get gameStatus () {
+    get gameStatus() {
       if (this.dealtList.length > 0) { return 'dealtting' }
 
-      if (!!this.movingPoker) { return 'autoMoving' }
+      if (this.movingPoker) { return 'autoMoving' }
 
-      const isDone = this.readyList.every((pokers) => pokers.length === 13)
+      const isDone = this.readyList.every(pokers => pokers.length === 13)
 
-      if (isDone) { 
-        return this.timeRemain > 0 ? 'transform' : 'success' 
+      if (isDone) {
+        return this.timeRemain > 0 ? 'transform' : 'success'
       }
 
-      if(this.score < 0 || (!isDone && this.timeRemain <= 0) ) { return 'fail' }
+      if (this.score < 0 || (!isDone && this.timeRemain <= 0)) { return 'fail' }
 
       return 'gaming'
     }
@@ -120,7 +125,7 @@
     }
 
     // 获取readyList 中扑克 x 方向离 canvas 的距离
-    getReadListX (index) {
+    getReadListX(index) {
       return 40 + this.getListX(4 + index)
     }
 
@@ -130,8 +135,8 @@
       ctx.drawImage(this.img, poker.num * w, poker.color * h, w, h, poker.currX, poker.currY, this.pokerWidth, this.pokerHeight)
     }
 
-    createDealtList () {
-      const dealtList = [];
+    createDealtList() {
+      const dealtList = []
       for (let i = 0; i < 13; i++) {
         for (let j = 0; j < 4; j++) {
           dealtList.push({
@@ -143,14 +148,14 @@
       return dealtList
     }
 
-    dealtPoker () {
+    dealtPoker() {
       this.drawStaticCvs()
       const pokers = this.dealtList
       const num = 52 - pokers.length
       if (num === 52) {
         this.autoPushReadyList()
         this.timeCutDown()
-        return 
+        return
       }
       const random = Math.floor(Math.random() * pokers.length)
       const pokerInfo = Object.assign({}, ...pokers.splice(random, 1))
@@ -199,7 +204,7 @@
       this.raf = window.requestAnimationFrame(this.drawMovingPoker.bind(this, status))
     }
 
-    drawStaticCvs () {
+    drawStaticCvs() {
       this.staticCtx.clearRect(0, 80, this.width, this.height - 100)
       this.drawPokerList()
       this.drawTempList()
@@ -207,49 +212,49 @@
       this.drawScore()
     }
 
-    drawPokerList () {
+    drawPokerList() {
       this.pokerList.map((pokers, index) => {
         const pokerSpaceY = this.getPokerSpaceY(pokers.length)
-        pokers.map((poker, subIndex) => {
+        return pokers.map((poker, subIndex) => {
           poker.currX = this.getListX(index)
           poker.currY = this.pokerListY + pokerSpaceY * subIndex
-          this.drawPoker(poker, this.staticCtx)
+          return this.drawPoker(poker, this.staticCtx)
         })
       })
     }
 
-    drawTempList () {
+    drawTempList() {
       this.tempList.map((pokers, index) => {
-        if(pokers.length !== 1) {
+        if (pokers.length !== 1) {
           return this.drawRect(this.getListX(index), this.tempListY, 'green')
         }
         const poker = pokers[0]
         poker.currX = this.getListX(index)
         poker.currY = this.tempListY
-        this.drawPoker(poker,this.staticCtx)
+        return this.drawPoker(poker, this.staticCtx)
       })
     }
 
-    drawRect (x, y, color) {
+    drawRect(x, y, color) {
       this.staticCtx.beginPath()
       this.staticCtx.strokeStyle = color
       this.staticCtx.lineJoin = 'round'
       this.staticCtx.strokeRect(x, y, this.pokerWidth, this.pokerHeight)
     }
 
-    drawReadyList () {
+    drawReadyList() {
       this.readyList.map((pokers, index) => {
-        if(pokers.length === 0) {
-          return this.drawRect(this.getReadListX (index), this.tempListY, 'blue')
+        if (pokers.length === 0) {
+          return this.drawRect(this.getReadListX(index), this.tempListY, 'blue')
         }
-        const [ poker ] = pokers.slice(-1)
-        poker.currX = this.getReadListX (index)
+        const [poker] = pokers.slice(-1)
+        poker.currX = this.getReadListX(index)
         poker.currY = this.tempListY
-        this.drawPoker(poker,this.staticCtx)
+        return this.drawPoker(poker, this.staticCtx)
       })
     }
 
-    drawScore () {
+    drawScore() {
       this.drawBackground(500, this.width - 500)
       const ctx = this.staticCtx
       ctx.restore()
@@ -261,7 +266,7 @@
       ctx.fillText(`得分：${this.score}   移动：${this.step}`, 500, 40)
     }
 
-    drawBackground (x, w) {
+    drawBackground(x, w) {
       const ctx = this.staticCtx
       ctx.restore()
       ctx.save()
@@ -271,7 +276,7 @@
       ctx.fillRect(x, 0, w, 80)
     }
 
-    timeCutDown () {
+    timeCutDown() {
       clearTimeout(this.timer)
       this.timer = setTimeout(() => {
         --this.timeRemain
@@ -280,12 +285,12 @@
           return this.drawGameOver()
         }
         this.timeCutDown()
-      }, 1000);
+      }, 1000)
     }
 
-    drawTimeRemain () {
+    drawTimeRemain() {
       const ss = (this.timeRemain % 60).toString().padStart(2, '0')
-      const mm = (Math.floor(this.timeRemain / 60)).toString().padStart(2, '0')
+      const mm = Math.floor(this.timeRemain / 60).toString().padStart(2, '0')
       this.drawBackground(0, 300)
       const ctx = this.staticCtx
       ctx.restore()
@@ -297,25 +302,23 @@
       ctx.fillText(`时间：${mm}:${ss}`, 20, 40)
     }
 
-    drawMovingList () {
+    drawMovingList() {
       this.movingCtx.clearRect(0, 0, this.width, this.height)
-      this.movingList.map((poker) => {
-        this.drawPoker(poker, this.movingCtx)
-      })
+      this.movingList.map(poker => this.drawPoker(poker, this.movingCtx))
     }
 
-    isMousedownPokerList (x, y) {
+    isMousedownPokerList(x, y) {
       let listIndex = -1
       let pokerIndex = -1
-      if(y > this.pokerListY) {
+      if (y > this.pokerListY) {
         listIndex = this.pokerList.findIndex((pokers, index) => {
-          let pokerX = this.getListX(index)
+          const pokerX = this.getListX(index)
           return x >= pokerX && x <= (pokerX + this.pokerWidth)
         })
-        
-        if(listIndex >= 0) {
+
+        if (listIndex >= 0) {
           pokerIndex = this.pokerList[listIndex].findIndex((poker, index, pokers) => {
-            if(index === pokers.length - 1) {
+            if (index === pokers.length - 1) {
               return y >= poker.currY && y <= poker.currY + this.pokerHeight
             }
             return y >= poker.currY && y <= pokers[index + 1].currY
@@ -325,8 +328,8 @@
       if (listIndex >= 0 && pokerIndex >= 0) {
         const isOrder = this.pokerList[listIndex].slice(pokerIndex).every((poker, index, arr) => {
           const smallPoker = poker
-          const bigPoker = arr[index -1]
-          return this.isDiffConsecutive({smallPoker, bigPoker})
+          const bigPoker = arr[index - 1]
+          return this.isDiffConsecutive({ smallPoker, bigPoker })
         })
         if (isOrder) {
           this.movingListInfo = Object.assign({
@@ -340,11 +343,11 @@
       return false
     }
 
-    isMousedownTempList (x, y) {
+    isMousedownTempList(x, y) {
       let listIndex = -1
-      if(y <= this.tempListY + this.pokerHeight) {
+      if (y <= this.tempListY + this.pokerHeight) {
         listIndex = this.tempList.findIndex((pokers, index) => {
-          let pokerX = this.getListX(index)
+          const pokerX = this.getListX(index)
           return x >= pokerX && x <= (pokerX + this.pokerWidth)
         })
       }
@@ -359,12 +362,12 @@
       return false
     }
 
-    isPushPokerList () {
+    isPushPokerList() {
       if (this.movingList.length === 0) {
         return false
       }
       let listIndex = -1
-      const {currX, currY} = this.movingList[0]
+      const { currX, currY } = this.movingList[0]
       if (currY > this.tempListY + this.pokerHeight) {
         listIndex = this.pokerList.findIndex((pokers, index) => {
           const listX = this.getListX(index)
@@ -372,15 +375,15 @@
             const [bigPoker] = pokers.slice(-1)
             const smallPoker = this.movingList[0]
             const isEmpty = pokers.length === 0
-            return this.movingList.length <= this.getMaxMoveNum(isEmpty) && this.isDiffConsecutive({smallPoker, bigPoker})
+            return this.movingList.length <= this.getMaxMoveNum(isEmpty) && this.isDiffConsecutive({ smallPoker, bigPoker })
           }
           return false
         })
       }
 
-      if(listIndex >= 0) {
+      if (listIndex >= 0) {
         this.pokerList[listIndex].push(...this.movingList.splice(0))
-        
+
         this.score -= 1
         this.step += 1
         return true
@@ -388,15 +391,15 @@
       return false
     }
 
-    isPushTempList () {
+    isPushTempList() {
       if (this.movingList.length !== 1) {
         return false
       }
 
       let listIndex = -1
-      const {currX, currY} = this.movingList[0]
+      const { currX, currY } = this.movingList[0]
 
-      if(currY <= this.tempListY + this.pokerHeight && currY + this.pokerHeight >= this.tempListY) {
+      if (currY <= this.tempListY + this.pokerHeight && currY + this.pokerHeight >= this.tempListY) {
         listIndex = this.tempList.findIndex((pokers, index) => {
           const listX = this.getListX(index)
           return pokers.length === 0 && (currX > listX - this.listSpaceX) && (currX < listX + this.pokerWidth)
@@ -405,7 +408,7 @@
 
       if (listIndex >= 0) {
         this.tempList[listIndex].push(...this.movingList.splice(0))
-        
+
         this.score -= 1
         this.step += 1
         return true
@@ -414,15 +417,15 @@
       return false
     }
 
-    isPushReadyList () {
+    isPushReadyList() {
       if (this.movingList.length !== 1) {
         return false
       }
 
       let listIndex = -1
-      const {currX, currY} = this.movingList[0]
-      
-      if(currY <= this.tempListY + this.pokerHeight && currY + this.pokerHeight >= this.tempListY) {
+      const { currX, currY } = this.movingList[0]
+
+      if (currY <= this.tempListY + this.pokerHeight && currY + this.pokerHeight >= this.tempListY) {
         listIndex = this.readyList.findIndex((pokers, index) => {
           const listX = this.getReadListX(index)
           if ((currX > listX - this.listSpaceX) && (currX < listX + this.pokerWidth)) {
@@ -436,7 +439,7 @@
 
       if (listIndex >= 0) {
         this.readyList[listIndex].push(...this.movingList.splice(0))
-        
+
         this.score += 3
         this.step += 1
         return true
@@ -446,7 +449,7 @@
     }
 
     // 判断相连的两张不同花色的牌
-    isDiffConsecutive ({ smallPoker, bigPoker }) {
+    isDiffConsecutive({ smallPoker, bigPoker }) {
       if (!smallPoker) {
         return false
       }
@@ -457,18 +460,18 @@
     }
 
     // 判断相连的两张相同花色的牌
-    isSameConsecutive ({ smallPoker, bigPoker }) {
+    isSameConsecutive({ smallPoker, bigPoker }) {
       if (!bigPoker) {
         return false
       }
 
-      if(!smallPoker) {
+      if (!smallPoker) {
         return bigPoker.num === 0
       }
       return (smallPoker.num + 1 === bigPoker.num) && (smallPoker.color === bigPoker.color)
     }
 
-    pokerMoveWithMouse (pokers, x, y) {
+    pokerMoveWithMouse(pokers, x, y) {
       const pokerSpaceY = this.getPokerSpaceY(this.movingList.length)
       this.movingList = pokers.map((poker, index) => {
         poker.currX = x - this.pokerWidth / 2
@@ -482,8 +485,8 @@
     }
 
     // 获取最大可移动的扑克数
-    getMaxMoveNum (isEmpty) {
-      const {top, btm} = this.movingListInfo
+    getMaxMoveNum(isEmpty) {
+      const { top, btm } = this.movingListInfo
 
       if (isEmpty) {
         return (top + 1) * btm
@@ -492,16 +495,16 @@
     }
 
     // 获取tempList和pokerList的空列
-    getEmptyMun () {
+    getEmptyMun() {
       const top = this.tempList.reduce((num, pokers) => {
-        if(pokers.length === 0) {
+        if (pokers.length === 0) {
           num++
         }
         return num
       }, 0)
 
       const btm = this.pokerList.reduce((num, pokers) => {
-        if(pokers.length === 0) {
+        if (pokers.length === 0) {
           num++
         }
         return num
@@ -510,11 +513,10 @@
       return { top, btm }
     }
 
-    autoPushReadyList () {
+    autoPushReadyList() {
       const status = this.gameStatus
 
       if (status === 'success' || status === 'transform') {
-        
         return this.timeTransformScore()
       }
 
@@ -524,18 +526,18 @@
       }
 
       const isPokerAutoMove = this.isPokerAutoMove(this.pokerList) || this.isPokerAutoMove(this.tempList)
-  
+
       if (isPokerAutoMove) {
         this.drawStaticCvs()
         this.drawMovingPoker()
-        return 
+        return
       }
     }
 
-    isPokerAutoMove (list) {
-      const bigPokerNum = Math.min(...Array.from(this.readyList, (item) => item.length))
-      
-      const bigPokerIndex = list.findIndex((pokers) => {
+    isPokerAutoMove(list) {
+      const bigPokerNum = Math.min(...Array.from(this.readyList, item => item.length))
+
+      const bigPokerIndex = list.findIndex(pokers => {
         const [poker] = pokers.slice(-1)
         if (!poker) {
           return false
@@ -543,19 +545,17 @@
         // 如果是张 2，找 readyList里面有没有相同花色的 1
         if (poker.num === 1) {
           const bigPoker = poker
-          return this.readyList.some(( [smallPoker] ) => {
-            return this.isSameConsecutive({ smallPoker, bigPoker })
-          })
+          return this.readyList.some(([smallPoker]) => this.isSameConsecutive({ smallPoker, bigPoker }))
         }
 
         return poker.num === bigPokerNum
       })
 
-      if(bigPokerIndex === -1) {
+      if (bigPokerIndex === -1) {
         return false
       }
 
-      const minPokerIndex = this.readyList.findIndex((pokers) => {
+      const minPokerIndex = this.readyList.findIndex(pokers => {
         const [smallPoker] = pokers.slice(-1)
         const [bigPoker] = list[bigPokerIndex].slice(-1)
         return this.isSameConsecutive({ smallPoker, bigPoker })
@@ -572,10 +572,10 @@
       }
       this.movingPoker.index = minPokerIndex
       this.score += 3
-      return true   
+      return true
     }
 
-    timeTransformScore () {
+    timeTransformScore() {
       clearTimeout(this.timer)
       this.timer = setTimeout(() => {
         --this.timeRemain
@@ -585,23 +585,23 @@
         if (this.timeRemain <= 0) {
           this.drawGameOver()
           return clearTimeout(this.timer)
-        } 
+        }
         return this.timeTransformScore()
-      }, 200);
+      }, 200)
     }
 
-    play () {
+    play() {
       this.dealtList = this.createDealtList()
-      this.pokerList = Array.from({ length: 8 }, item => [])
-      this.tempList = Array.from({ length: 4 }, item => [])
-      this.readyList = Array.from({ length: 4 }, item => [])
+      this.pokerList = Array.from({ length: 8 }, () => [])
+      this.tempList = Array.from({ length: 4 }, () => [])
+      this.readyList = Array.from({ length: 4 }, () => [])
 
       this.movingList = []
       this.movingListInfo = {
         index: -1,
         list: '',
         top: 4,
-        btm: 0 
+        btm: 0
       }
 
       this.score = 20
@@ -612,16 +612,16 @@
       this.timer = null
       this.movingPoker = null
 
-      if(this.raf) {
+      if (this.raf) {
         window.cancelAnimationFrame(this.raf)
       }
-      
+
       this.drawTimeRemain()
       this.drawReplayBtn()
       this.dealtPoker()
     }
 
-    drawReplayBtn () {
+    drawReplayBtn() {
       this.drawBackground(300, 200)
       const ctx = this.staticCtx
 
@@ -632,7 +632,7 @@
       })
     }
 
-    drawGameOver () {
+    drawGameOver() {
       const ctx = this.movingCtx
       ctx.clearRect(0, 0, this.width, this.height)
 
@@ -653,11 +653,11 @@
       this.drawButton(ctx, {
         x: 390,
         y: 320,
-        text: '开始',
+        text: '开始'
       })
     }
 
-    drawButton (ctx, {x, y, width = 120, height = 60, text, radius = 5}) {
+    drawButton(ctx, { x, y, width = 120, height = 60, text, radius = 5 }) {
       ctx.restore()
       ctx.save()
       // 圆角矩形
@@ -665,11 +665,11 @@
       ctx.lineTo(x + width - radius, y)
       ctx.quadraticCurveTo(x + width, y, x + width, y + radius)
       ctx.lineTo(x + width, y + height - radius)
-      ctx.quadraticCurveTo(x + width, y + height, x + width -radius, y + height);
-      ctx.lineTo(x + radius, y + height);
-      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-      ctx.lineTo(x, y + radius);
-      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
+      ctx.lineTo(x + radius, y + height)
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius)
+      ctx.lineTo(x, y + radius)
+      ctx.quadraticCurveTo(x, y, x + radius, y)
 
       ctx.fillStyle = '#409eff'
       ctx.shadowOffsetX = 0
