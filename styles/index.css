@@ -1,0 +1,7 @@
+#cvs-box canvas {
+  margin: 0 auto;
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%);
+  box-shadow: 0 0 10px 10px #888888;
+}
