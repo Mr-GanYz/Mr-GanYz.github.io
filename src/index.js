@@ -14,7 +14,7 @@ import './styles/index.css'
     }
 
     get isArrived() {
-      return (this.vy === 0 && this.currX >= this.endX) || (this.currY <= this.endY)
+      return (this.vy === 0 && this.currX >= this.endX) || (this.vy !== 0 && this.currY <= this.endY)
     }
   }
 
@@ -42,7 +42,7 @@ import './styles/index.css'
       box.appendChild(this.movingCvs)
 
       this.img = new Image()
-      this.img.src = require('./images/poker-cards.svg')
+      this.img.src = require('./images/poker-cards.png')
 
       this.pokerListY = 230 // y 方向上 pokerList 的基线
       this.listSpaceX = 40 // 扑克 x 方向的间距
@@ -131,7 +131,7 @@ import './styles/index.css'
 
     drawPoker(poker, ctx = this.staticCtx) {
       const w = this.img.width / 13
-      const h = this.img.height / 5
+      const h = this.img.height / 4
       ctx.drawImage(this.img, poker.num * w, poker.color * h, w, h, poker.currX, poker.currY, this.pokerWidth, this.pokerHeight)
     }
 
