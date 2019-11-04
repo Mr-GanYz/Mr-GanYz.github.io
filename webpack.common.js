@@ -1,6 +1,6 @@
-const { resolve } = require('path')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
-const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const { resolve } = require('path');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 module.exports = {
   entry: './src/index.js',
@@ -35,7 +35,7 @@ module.exports = {
             loader: 'url-loader',
             options: {
               name: '[name].[ext]',
-              outputPath: "images/",
+              outputPath: 'images/',
               limit: 2048
             }
           }
@@ -50,4 +50,4 @@ module.exports = {
       template: './src/index.html'
     })
   ]
-}
+};
