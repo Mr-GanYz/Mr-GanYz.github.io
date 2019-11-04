@@ -5,8 +5,9 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 module.exports = {
   entry: './src/index.js',
   output: {
-    path: resolve(__dirname, 'dist'),
-    filename: 'index.js'
+    filename: '[name].[chunkhash].js',
+    chunkFilename: '[name].js',
+    path: resolve(__dirname, 'dist')
   },
 
   module: {
@@ -33,7 +34,9 @@ module.exports = {
           {
             loader: 'url-loader',
             options: {
-              limit: 100000
+              name: '[name].[ext]',
+              outputPath: "images/",
+              limit: 2048
             }
           }
         ]
